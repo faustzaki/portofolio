@@ -64,3 +64,37 @@ body {
     --stack-top: 64px;
   }
 }
+
+/* Custom cursor (§ custom): white circle in `difference` blend so it inverts
+   whatever element it passes over, trailing the pointer with a lag and
+   magnetically merging into the hovered button/link.
+   ponytail: blend mode makes the disc opaque-black over pure-white areas — drop
+   `mix-blend-mode` if that ever reads wrong over light media. */
+@media (hover: hover) and (pointer: fine) {
+  body,
+  a,
+  button,
+  [data-cursor="magnet"] {
+    cursor: none;
+  }
+}
+
+.pointer-follower {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0;
+  border-radius: 9999px;
+  background: #fff;
+  mix-blend-mode: difference;
+  transition: opacity 200ms ease, border-radius 180ms ease;
+  will-change: transform, width, height;
+}
+
+@media (hover: none), (pointer: coarse) {
+  .pointer-follower {
+    display: none;
+  }
+}

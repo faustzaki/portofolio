@@ -37,7 +37,7 @@ export type SocialLink = {
 };
 
 export const bio = {
-  name: "Faustzaki",
+  name: "Faustzaki Ghathaf Rizqi",
   role: "Creative Developer & UI/UX Designer",
   headline: "Building interfaces that sell the story — fast for recruiters, alive for everyone else.",
   about: "Freelance creative developer and designer focused on the point where marketing meets craft: interfaces that load fast, read clean and move with intent. Four years across studios and independent clients, from fintech dashboards to award-entry campaign sites.",

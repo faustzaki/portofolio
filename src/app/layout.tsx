@@ -4,7 +4,7 @@ import "./globals.css";
 import { SmoothScroll } from "@/components/SmoothScroll";
 
 export const metadata: Metadata = {
-  title: "Faustzaki — Creative Developer & UI/UX Designer",
+  title: "Faustzaki Ghathaf Rizqi — Creative Developer & UI/UX Designer",
   description: "Showcase portfolio: interactive experiences and recruiter-fast project index.",
 };
 

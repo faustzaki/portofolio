@@ -13,6 +13,7 @@ const links = [
 
 export function SiteHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [floating, setFloating] = useState(false);
   const { mode, toggle } = useMode();
   const showcase = mode === "showcase";
   const accent = showcase ? "var(--color-showcase)" : "var(--color-accent)";
@@ -20,9 +21,7 @@ export function SiteHeader() {
   // Close mobile drawer on desktop resize
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 768) {
-        setMobileOpen(false);
-      }
+      if (window.innerWidth >= 768) setMobileOpen(false);
     };
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
@@ -30,108 +29,126 @@ export function SiteHeader() {
 
   // Prevent scroll when mobile menu is open
   useEffect(() => {
-    if (mobileOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
   }, [mobileOpen]);
 
+  // Transparent over hero, solid once scrolled. Lenis transforms the page
+  // instead of scrolling it natively, so subscribe to the published engine
+  // (SmoothScroll sets window.__lenis) and fall back to native scroll.
+  useEffect(() => {
+    type LenisLike = {
+      on?: (event: "scroll", cb: (e: { scroll: number }) => void) => void;
+      off?: (event: "scroll", cb: (e: { scroll: number }) => void) => void;
+      scroll?: number;
+    };
+    const lenis = (window as unknown as { __lenis?: LenisLike }).__lenis;
+    const apply = (y: number) => setFloating(y > 20);
+    if (lenis?.on) {
+      const cb = ({ scroll }: { scroll: number }) => apply(scroll);
+      lenis.on("scroll", cb);
+      apply(lenis.scroll ?? 0);
+      return () => lenis.off?.("scroll", cb);
+    }
+    const onScroll = () => apply(window.scrollY);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
     <header
-      className="sticky top-0 z-50 w-full bg-background"
+      className={`fixed inset-x-0 top-0 z-50 w-full transition-colors duration-300 ${
+        floating ? "bg-background" : "bg-transparent"
+      }`}
       style={{ "--nav-accent": accent } as React.CSSProperties}
     >
-      {/* Edge-to-edge layout without horizontal padding */}
-      <div className="flex h-14 w-full items-center justify-between px-0">
-        {/* Left corner: Name, Software Engineer, Minimalist Switch Box */}
-        <div className="flex items-center gap-4 pl-0 sm:gap-6">
-          <a
-            href="#top"
-            className="font-mono text-xs font-bold uppercase tracking-wider text-primary transition-colors hover:text-[var(--nav-accent)]"
-          >
-            {bio.name}
-          </a>
+      {/* Full-bleed 5-zone bar: name / role block / mode toggle / links / meta — items pinned near viewport edges */}
+      <div className="flex h-16 w-full items-center justify-between gap-4 px-5 sm:px-8">
+        {/* Zone 1 — far left wordmark */}
+        <a
+          href="#top"
+          className="font-mono text-xs font-bold uppercase tracking-wider text-primary transition-colors hover:text-[var(--nav-accent)]"
+        >
+          <span className="sm:hidden">{bio.name.split(" ")[0]}</span>
+          <span className="hidden sm:inline">{bio.name}</span>
+        </a>
 
-          <span className="hidden font-mono text-[11px] uppercase tracking-wider text-muted sm:inline-block">
-            Software Engineer
-          </span>
-
-          {/* Minimalist switch box — no text label, purely a geometric box */}
-          <button
-            type="button"
-            onClick={toggle}
-            aria-label="Toggle display mode"
-            aria-pressed={showcase}
-            title={showcase ? "Showcase mode active" : "Recruiter mode active"}
-            className="relative flex h-3.5 w-3.5 items-center justify-center border transition-all duration-300"
-            style={{
-              borderColor: showcase ? "var(--color-showcase)" : "var(--color-border)",
-              boxShadow: showcase ? "0 0 8px rgba(0, 240, 255, 0.45)" : "none",
-            }}
-          >
-            <span
-              className="block transition-all duration-300"
-              style={{
-                width: showcase ? "7px" : "0px",
-                height: showcase ? "7px" : "0px",
-                backgroundColor: showcase ? "var(--color-showcase)" : "transparent",
-              }}
-            />
-          </button>
+        {/* Zone 2 — two-row role block */}
+        <div className="hidden flex-col gap-0.5 font-mono text-[10px] uppercase leading-tight tracking-wider text-muted lg:flex">
+          <span>{bio.role}</span>
+          <span>{bio.location}</span>
         </div>
 
-        {/* Right corner: Desktop navigation links (About, Work, Skill, Contact) + Resume */}
-        <nav
-          aria-label="Primary navigation"
-          className="hidden items-center gap-8 pr-0 md:flex"
+        {/* Zone 3 — twin square indicators, doubles as the display-mode toggle */}
+        <button
+          type="button"
+          onClick={toggle}
+          aria-label="Toggle display mode"
+          aria-pressed={showcase}
+          title={showcase ? "Showcase mode active" : "Recruiter mode active"}
+          className="hidden items-center gap-1.5 md:flex"
         >
+          <span
+            className="block h-2 w-2 border transition-colors duration-300"
+            style={{ borderColor: showcase ? "var(--color-showcase)" : "var(--color-border)" }}
+          />
+          <span
+            className="block h-2 w-2 transition-all duration-300"
+            style={{
+              backgroundColor: showcase ? "var(--color-showcase)" : "transparent",
+              boxShadow: showcase ? "0 0 8px rgba(0, 240, 255, 0.45)" : "none",
+              border: showcase ? "none" : "1px solid var(--color-border)",
+            }}
+          />
+        </button>
+
+        {/* Zone 4 — inline desktop navigation links */}
+        <nav aria-label="Primary navigation" className="hidden items-center gap-7 md:flex lg:gap-9">
           {links.map((l) => (
             <a
               key={l.href}
               href={l.href}
               data-nav-link
-              className="font-mono text-xs uppercase tracking-widest text-muted"
+              className="font-mono text-xs uppercase tracking-widest text-primary"
             >
               {l.label}
             </a>
           ))}
-          <a
-            href={bio.resumeHref}
-            download
-            data-nav-link
-            className="font-mono text-xs uppercase tracking-widest text-primary"
-          >
-            Resume
-          </a>
         </nav>
 
-        {/* Mobile Hamburger Button */}
+        {/* Zone 5 — far right two-row meta */}
+        <div className="hidden flex-col items-end gap-0.5 font-mono text-[10px] uppercase leading-tight tracking-wider text-muted lg:flex">
+          <span>{bio.available ? "Open for work" : "Closed"}</span>
+          <a
+            href={`mailto:${bio.email}`}
+            className="normal-case transition-colors hover:text-[var(--nav-accent)]"
+          >
+            {bio.email}
+          </a>
+        </div>
+
+        {/* Mobile hamburger */}
         <button
           type="button"
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label="Toggle mobile menu"
           aria-expanded={mobileOpen}
-          className="flex h-10 w-10 flex-col items-center justify-center gap-1.5 pr-0 md:hidden focus:outline-none"
+          className="flex h-10 w-10 flex-col items-center justify-center gap-1.5 pr-0 focus:outline-none md:hidden"
         >
           <span
             className="block h-[1.5px] w-5 bg-primary transition-all duration-300"
             style={{
-              transform: mobileOpen
-                ? "translateY(4.5px) rotate(45deg)"
-                : "none",
+              transform: mobileOpen ? "translateY(4.5px) rotate(45deg)" : "none",
               backgroundColor: mobileOpen ? accent : undefined,
             }}
           />
           <span
             className="block h-[1.5px] w-5 bg-primary transition-all duration-300"
             style={{
-              transform: mobileOpen
-                ? "translateY(-4.5px) rotate(-45deg)"
-                : "none",
+              transform: mobileOpen ? "translateY(-4.5px) rotate(-45deg)" : "none",
               backgroundColor: mobileOpen ? accent : undefined,
             }}
           />
@@ -142,7 +159,7 @@ export function SiteHeader() {
       {mobileOpen && (
         <nav
           aria-label="Mobile navigation"
-          className="fixed inset-x-0 top-14 z-50 flex h-[calc(100vh-3.5rem)] flex-col justify-between bg-background px-6 py-10 md:hidden"
+          className="fixed inset-x-0 top-16 z-50 flex h-[calc(100vh-4rem)] flex-col justify-between bg-background px-6 py-10 md:hidden"
         >
           <div className="flex flex-col gap-8">
             {links.map((l) => (
@@ -169,11 +186,7 @@ export function SiteHeader() {
 
           <div className="flex items-center justify-between border-t border-border pt-6 font-mono text-xs text-muted">
             <span className="tracking-widest">DISPLAY MODE</span>
-            <button
-              type="button"
-              onClick={toggle}
-              className="flex items-center gap-3"
-            >
+            <button type="button" onClick={toggle} className="flex items-center gap-3">
               <span
                 className="flex h-4 w-4 items-center justify-center border transition-all duration-300"
                 style={{
