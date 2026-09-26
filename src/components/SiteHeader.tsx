@@ -35,27 +35,15 @@ export function SiteHeader() {
     };
   }, [mobileOpen]);
 
-  // Transparent over hero, solid once scrolled. Lenis transforms the page
-  // instead of scrolling it natively, so subscribe to the published engine
-  // (SmoothScroll sets window.__lenis) and fall back to native scroll.
+  // Transparent over the full-screen hero, solid once the hero has started
+  // its shrink (the timeline's first phase ends at 21%). Lenis drives the
+  // native scrollbar, so the native `scroll` event is the reliable signal —
+  // subscribing to window.__lenis races its (re)creation under StrictMode.
   useEffect(() => {
-    type LenisLike = {
-      on?: (event: "scroll", cb: (e: { scroll: number }) => void) => void;
-      off?: (event: "scroll", cb: (e: { scroll: number }) => void) => void;
-      scroll?: number;
-    };
-    const lenis = (window as unknown as { __lenis?: LenisLike }).__lenis;
-    const apply = (y: number) => setFloating(y > 20);
-    if (lenis?.on) {
-      const cb = ({ scroll }: { scroll: number }) => apply(scroll);
-      lenis.on("scroll", cb);
-      apply(lenis.scroll ?? 0);
-      return () => lenis.off?.("scroll", cb);
-    }
-    const onScroll = () => apply(window.scrollY);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-    return () => window.removeEventListener("scroll", onScroll);
+    const apply = () => setFloating(window.scrollY > window.innerHeight * 0.35);
+    window.addEventListener("scroll", apply, { passive: true });
+    apply();
+    return () => window.removeEventListener("scroll", apply);
   }, []);
 
   return (

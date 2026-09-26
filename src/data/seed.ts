@@ -40,12 +40,19 @@ export const bio = {
   name: "Faustzaki Ghathaf Rizqi",
   role: "Creative Developer & UI/UX Designer",
   headline: "Building interfaces that sell the story — fast for recruiters, alive for everyone else.",
+  /** Shown under the giant name once the headline is demoted to a sub-line. */
+  headlineTall: "Building interfaces that sell the story.",
+  /** Right-hand sentence in the hero's top row (reference layout: two sentences). */
+  taglineTall: "Your brand should know that.",
   about: "Freelance creative developer and designer focused on the point where marketing meets craft: interfaces that load fast, read clean and move with intent. Four years across studios and independent clients, from fintech dashboards to award-entry campaign sites.",
   location: "Jakarta, Indonesia",
   available: true,
   /** ponytail: drop /resume.pdf in public/ when the resume exists (M2 wires the download) */
   resumeHref: "/resume.pdf",
   email: "hello@faustzaki.dev",
+  /** Cycled after "I create —" in the hero. Add/remove freely; keep it 5 for
+      the CSS slot timing in globals.css (`.rot-word`). */
+  creates: ["websites", "apps", "programs", "systems", "interfaces"],
   stats: [
     { label: "Years crafting", value: "4+" },
     { label: "Projects shipped", value: "20+" },

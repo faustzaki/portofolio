@@ -11,8 +11,11 @@ export default function Home() {
   return (
     <ModeProvider>
       <SiteHeader />
-      <main className="mx-auto w-full max-w-6xl flex-1 px-6 pb-24 pt-24">
-        <Hero />
+      {/* Hero sits outside <main> so it can bleed to the viewport edges. */}
+      <Hero />
+      {/* Negative top margin cancels the hero track's blank tail, so Work
+          arrives exactly as the hero finishes collapsing (no empty screen). */}
+      <main className="relative z-10 -mt-[calc(100svh-6rem)] mx-auto w-full max-w-6xl flex-1 px-6 pb-24 pt-24">
         <ProjectStack />
         <SkillsExperience />
         <AboutContact />
